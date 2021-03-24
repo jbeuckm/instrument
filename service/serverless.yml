@@ -1,0 +1,86 @@
+# Welcome to serverless. Read the docs
+# https://serverless.com/framework/docs/
+
+# Serverless.yml is the configuration the CLI
+# uses to deploy your code to your provider of choice
+
+# The `service` block is the name of the service
+service: instrument
+
+frameworkVersion: "2"
+
+# The `provider` block defines where your service will be deployed
+provider:
+  name: aws
+  runtime: nodejs12.x
+  apiKeys:
+    - read-api-key
+    - write-api-key
+  region: us-east-2
+  environment:
+    DYNAMODB_TABLE: readings
+    DYNAMODB_FETCH_INDEX: readings.period
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+# The `functions` block defines what code to deploy
+functions:
+  getReadings:
+    handler: readings/fetch.getReadings
+    events:
+      - http:
+          path: readings
+          method: get
+          cors: true
+          private: true
+  save:
+    handler: readings/save.save
+    events:
+      - http:
+          path: readings
+          method: post
+          cors: true
+          private: true
+
+resources: # CloudFormation template syntax from here on.
+  Resources:
+    readings:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "readings"
+        AttributeDefinitions:
+          - AttributeName: "partition"
+            AttributeType: "S"
+          - AttributeName: "source"
+            AttributeType: "S"
+          - AttributeName: "timestamp"
+            AttributeType: "N"
+        KeySchema:
+          - AttributeName: "source"
+            KeyType: "HASH"
+          - AttributeName: "timestamp"
+            KeyType: "RANGE"
+        GlobalSecondaryIndexes:
+          - IndexName: period
+            KeySchema:
+              - AttributeName: "partition"
+                KeyType: HASH
+              - AttributeName: "timestamp"
+                KeyType: "RANGE"
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
