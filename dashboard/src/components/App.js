@@ -19,8 +19,7 @@ const App = () => {
   const [voronoiData, setVoronoiData] = useState()
   const [now, setNow] = useState(new Date())
   const [zoomDomainX, setZoomDomainX] = useState([now.valueOf])
-
-  // const now = new Date()
+  const [maxX, setMaxX] = useState(new Date())
 
   const updateData = debounce(
     (from, to) => {
@@ -32,14 +31,12 @@ const App = () => {
         setSeries(newSeries)
       })
     },
-    500,
+    1000,
     { trailing: true }
   )
 
   useEffect(() => {
     updateData()
-
-    setInterval(updateData, 5 * 60 * 1000)
   }, [])
 
   const handleDomainChanged = useCallback(
@@ -82,7 +79,7 @@ const App = () => {
         width={window.innerWidth}
         scale={{ x: 'time' }}
         minDomain={{ x: START_DATE, y: -30 }}
-        maxDomain={{ x: now, y: 55 }}
+        maxDomain={{ x: maxX, y: 55 }}
         containerComponent={
           <SelectDataContainer
             zoomDimension="x"

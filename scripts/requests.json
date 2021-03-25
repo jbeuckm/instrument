@@ -1,0 +1,454 @@
+{
+  "readings": [
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612063642526"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612063945977"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612064249427"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612064552841"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612064856172"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612065159575"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612065462990"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612065766388"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.125"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612066069718"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612066373169"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612066676576"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612066981022"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612067285473"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.125"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612067588874"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612067892288"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612068195694"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612068500248"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612068803846"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612069107263"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612069410673"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.1875"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612069714078"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612070017433"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612070320965"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.25"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612070624313"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "reading": {
+            "N": "15.3125"
+          },
+          "source": {
+            "S": "28c1267d613c45"
+          },
+          "timestamp": {
+            "N": "1612070928754"
+          },
+          "partition": {
+            "S": "default"
+          }
+        }
+      }
+    }
+  ]
+}

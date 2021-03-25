@@ -14,20 +14,21 @@
 #include <ESP8266HTTPClient.h>
 
 #include <WiFiClientSecureBearSSL.h>
-#include <ArduinoJson.h> 
+#include <ArduinoJson.h>
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "secrets.h"
 
-// Data wire is conntec to the Arduino digital pin 4
-#define ONE_WIRE_BUS 4
+// pin 4 (D1 classic size arduino board)
+// pin 2 (wemo mini board)
+#define ONE_WIRE_BUS 2 // probably 2 on wemo?
 #define ledPin 14
 
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire oneWire(ONE_WIRE_BUS);
 
-// Pass our oneWire reference to Dallas Temperature sensor 
+// Pass our oneWire reference to Dallas Temperature sensor
 DallasTemperature sensors(&oneWire);
 int sensorCount = 0;
 bool wifiConnected = false;
@@ -80,7 +81,7 @@ String printAddress(DeviceAddress deviceAddress) {
 
 void loop() {
   // Call sensors.requestTemperatures() to issue a global temperature and Requests to all devices on the bus
-  sensors.requestTemperatures(); 
+  sensors.requestTemperatures();
 
   sensorCount = sensors.getDeviceCount();
   Serial.print("found sensors: ");
@@ -109,13 +110,13 @@ void loop() {
       for (int i=0; i<sensorCount; i++) {
         DeviceAddress t;
         sensors.getAddress(t, i);
-  
+
         String address = printAddress(t);
         doc[address] = sensors.getTempCByIndex(i);
       }
       String postMessage;
       serializeJson(doc, postMessage);
-  
+
       Serial.print("[HTTPS] POST...\n");
       serializeJson(doc, Serial);
       Serial.println("");
