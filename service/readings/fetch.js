@@ -32,31 +32,45 @@ module.exports.getReadings = async (event, context, callback) => {
   }
 };
 
+const getPage = (partiQL, NextToken) =>
+  new Promise((resolve, reject) => {
+    const params = {
+      NextToken,
+      Statement: partiQL,
+    };
+
+    dynamoDb.executeStatement(params, function (err, response) {
+      if (err) {
+        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+        reject(err);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+
 const getData = ({ queryStringParameters: query }) => {
   console.log("getData", query);
 
   const fromParam = query && query.from ? parseInt(query.from) : now - 5 * DAY;
   const toParam = query && query.to ? parseInt(query.to) : now;
 
-  var params = {
-    Statement: `SELECT * FROM ${process.env.DYNAMODB_FETCH_INDEX} WHERE "partition" = 'default' AND "timestamp" >= ${fromParam} AND "timestamp" <= ${toParam}`,
-  };
+  const partiQL = `SELECT * FROM ${process.env.DYNAMODB_FETCH_INDEX} WHERE "partition" = 'default' AND "timestamp" >= ${fromParam} AND "timestamp" <= ${toParam}`;
 
-  return new Promise((resolve, reject) => {
-    dynamoDb.executeStatement(params, function (err, data) {
-      if (err) {
-        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
-        reject(err);
-      } else {
-        console.log("Query succeeded.");
+  return new Promise(async (resolve, reject) => {
+    let response = {},
+      csv = "timestamp,source,reading\n";
 
-        let csv = "timestamp,source,reading\n";
-        data.Items.forEach(function (item) {
-          csv += `${item.timestamp.N},${item.source.S},${item.reading.N}\n`;
-        });
+    do {
+      response = await getPage(partiQL, response.NextToken);
 
-        resolve(csv);
-      }
-    });
+      console.log("Query succeeded.", { NextToken: response.NextToken });
+
+      response.Items.forEach(function (item) {
+        csv += `${item.timestamp.N},${item.source.S},${item.reading.N}\n`;
+      });
+    } while (response.NextToken);
+
+    resolve(csv);
   });
 };
