@@ -9,7 +9,10 @@
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
+//#include <ESP8266WiFiMulti.h>
+#include <CertStoreBearSSL.h>
+#include <time.h>
+#include <LittleFS.h>
 
 #include <ESP8266HTTPClient.h>
 
@@ -20,9 +23,13 @@
 #include <DallasTemperature.h>
 #include "secrets.h"
 
+
+BearSSL::CertStore certStore;
+
+
 // pin 4 (D1 classic size arduino board)
 // pin 2 (wemo mini board)
-#define ONE_WIRE_BUS 2 // probably 2 on wemo?
+#define ONE_WIRE_BUS 4 // probably 2 on wemo?
 #define ledPin 14
 
 // Setup a oneWire instance to communicate with any OneWire devices
@@ -33,17 +40,29 @@ DallasTemperature sensors(&oneWire);
 int sensorCount = 0;
 bool wifiConnected = false;
 
-// Fingerprint for demo URL, expires on June 2, 2021, needs to be updated well before this date
-const uint8_t fingerprint[20] = {0x40, 0xaf, 0x00, 0x6b, 0xec, 0x90, 0x22, 0x41, 0x8e, 0xa3, 0xad, 0xfa, 0x1a, 0xe8, 0x25, 0x41, 0x1d, 0x1a, 0x54, 0xb3};
-// aws lambda fingerprint https://t62i5rchr0.execute-api.us-east-2.amazonaws.com
-// const uint8_t fingerprint2[20] = {0x3F, 0xBA, 0x9A, 0x29, 0xCC, 0x33, 0x3A, 0xC6, 0xAF, 0x74, 0xD0, 0x19, 0xF4, 0xB4, 0xCE, 0x83, 0xFE, 0x12, 0x6D, 0x1D};
-// aws lambda fingerprint https://if2574leol.execute-api.us-east-2.amazonaws.com
-const uint8_t fingerprint2[20] = {0xAC, 0x9E, 0x24, 0xF0, 0x61, 0x01, 0x19, 0x48, 0x00, 0x04, 0x1F, 0xD6, 0x01, 0x12, 0x7F, 0xC2, 0x8F, 0x35, 0xA6, 0xBB};
-
-ESP8266WiFiMulti WiFiMulti;
-
 
 #define SERVICE_URL "https://if2574leol.execute-api.us-east-2.amazonaws.com/dev/readings"
+#define SERVICE_HOST "if2574leol.execute-api.us-east-2.amazonaws.com"
+#define SERVICE_PATH "/dev/readings"
+
+
+// Set time via NTP, as required for x.509 validation
+void setClock() {
+  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
+  while (now < 8 * 3600 * 2) {
+    delay(500);
+    Serial.print(".");
+    now = time(nullptr);
+  }
+  Serial.println("");
+  struct tm timeinfo;
+  gmtime_r(&now, &timeinfo);
+  Serial.print("Current time: ");
+  Serial.print(asctime(&timeinfo));
+}
 
 
 void setup() {
@@ -53,6 +72,8 @@ void setup() {
   Serial.begin(115200);
 //   Serial.setDebugOutput(true);
 
+  LittleFS.begin();
+  
   Serial.println();
   Serial.println();
   Serial.println();
@@ -63,9 +84,39 @@ void setup() {
     delay(1000);
   }
 
-  WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP(STASSID, STAPSK);
+//  WiFi.mode(WIFI_STA);
+//  WiFiMulti.addAP(STASSID, STAPSK);
 
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(STASSID, STAPSK);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+    Serial.println("");
+
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  
+  setClock();
+
+  
+  int numCerts = certStore.initCertStore(LittleFS, PSTR("/certs.idx"), PSTR("/certs.ar"));
+  Serial.printf("Number of CA certs read: %d\n", numCerts);
+  if (numCerts == 0) {
+    Serial.printf("No certs found. Did you run certs-from-mozilla.py and upload the LittleFS directory before running?\n");
+    return; // Can't connect to anything w/o certs!
+  }
+
+//  BearSSL::WiFiClientSecure *bear = new BearSSL::WiFiClientSecure();
+//  // Integrate the cert store with this connection
+//  bear->setCertStore(&certStore);
+//  Serial.printf("Attempting to fetch https://github.com/...\n");
+//  fetchURL(bear, "github.com", 443, "/");
+//  delete bear;
+  
   sensors.begin();
 }
 
@@ -79,6 +130,53 @@ String printAddress(DeviceAddress deviceAddress) {
   return str;
 }
 
+void post(BearSSL::WiFiClientSecure *client, const char *host, const uint16_t port, const char *path, const char *data) {
+  if (!path) {
+    path = "/";
+  }
+
+  Serial.printf("Trying: %s:443...", host);
+  client->connect(host, port);
+  if (!client->connected()) {
+    Serial.printf("*** Can't connect. ***\n-------\n");
+    return;
+  }
+  Serial.printf("Connected!\n-------\n");
+  client->write("POST ");
+  client->write(path);
+  client->write(" HTTP/1.0\r\nHost: ");
+  client->write(host);
+  client->write("\r\nUser-Agent: ESP8266\r\n");
+  client->write("x-api-key: ");
+  client->write(API_KEY);
+  client->write("\r\n");
+  client->write("Content-Type: application/json\r\n");
+  client->write(data);
+  client->write("\r\n");
+  uint32_t to = millis() + 5000;
+  if (client->connected()) {
+    do {
+      char tmp[32];
+      memset(tmp, 0, 32);
+      int rlen = client->read((uint8_t*)tmp, sizeof(tmp) - 1);
+      yield();
+      if (rlen < 0) {
+        break;
+      }
+//      // Only print out first line up to \r, then abort connection
+//      char *nl = strchr(tmp, '\r');
+//      if (nl) {
+//        *nl = 0;
+//        Serial.print(tmp);
+//        break;
+//      }
+      Serial.print(tmp);
+    } while (millis() < to);
+  }
+  client->stop();
+  Serial.printf("\n-------\n");
+}
+
 void loop() {
   // Call sensors.requestTemperatures() to issue a global temperature and Requests to all devices on the bus
   sensors.requestTemperatures();
@@ -88,38 +186,44 @@ void loop() {
   Serial.println(sensorCount);
 
   // wait for WiFi connection
-  if ((WiFiMulti.run() == WL_CONNECTED)) {
+//  if (WiFi.status() == WL_CONNECTED) {
+//  while (WiFi.status() != WL_CONNECTED) {
+//    delay(500);
+//    Serial.print(".");
+//  }
 
     wifiConnected = true;
-    std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
 
-    client->setFingerprint(fingerprint2);
+    const int capacity = JSON_OBJECT_SIZE(10);
+    StaticJsonDocument<capacity> doc;
+
+    for (int i=0; i<sensorCount; i++) {
+      DeviceAddress t;
+      sensors.getAddress(t, i);
+
+      String address = printAddress(t);
+      doc[address] = sensors.getTempCByIndex(i);
+    }
+    String postMessage;
+    serializeJson(doc, postMessage);
+
+    Serial.print("[HTTPS] POST...\n");
+    serializeJson(doc, Serial);
+    Serial.println("");
+
+    BearSSL::WiFiClientSecure *client = new BearSSL::WiFiClientSecure();
+    // Integrate the cert store with this connection
+    client->setCertStore(&certStore);
+
 
     HTTPClient https;
 
     Serial.print("[HTTPS] begin...\n");
+    
     if (https.begin(*client, SERVICE_URL)) {  // HTTPS
 
       https.addHeader("x-api-key", API_KEY);
       https.addHeader("Content-Type", "application/json");
-
-      const int capacity = JSON_OBJECT_SIZE(10);
-      StaticJsonDocument<capacity> doc;
-
-
-      for (int i=0; i<sensorCount; i++) {
-        DeviceAddress t;
-        sensors.getAddress(t, i);
-
-        String address = printAddress(t);
-        doc[address] = sensors.getTempCByIndex(i);
-      }
-      String postMessage;
-      serializeJson(doc, postMessage);
-
-      Serial.print("[HTTPS] POST...\n");
-      serializeJson(doc, Serial);
-      Serial.println("");
 
       // start connection and send HTTP header
       int httpCode = https.POST(postMessage);
@@ -139,13 +243,23 @@ void loop() {
       }
 
       https.end();
+
     } else {
       Serial.printf("[HTTPS] Unable to connect\n");
     }
-  } else {
-    Serial.printf("WiFi not connected\n");
-    wifiConnected = false;
-  }
+
+
+//    int str_len = postMessage.length() + 1; 
+//    char char_array[str_len];
+//    postMessage.toCharArray(char_array, str_len);
+//    post(client, SERVICE_HOST, 443, SERVICE_PATH, char_array);
+      
+    delete client;
+
+//  } else {
+//    Serial.printf("WiFi not connected\n");
+//    wifiConnected = false;
+//  }
 
   for (int i=0; i<sensorCount; i++) {
     digitalWrite(ledPin,HIGH);
