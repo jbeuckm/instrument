@@ -29,7 +29,7 @@ BearSSL::CertStore certStore;
 
 // pin 4 (D1 classic size arduino board)
 // pin 2 (wemo mini board)
-#define ONE_WIRE_BUS 4 // probably 2 on wemo?
+#define ONE_WIRE_BUS 2 // probably 2 on wemo?
 #define ledPin 14
 
 // Setup a oneWire instance to communicate with any OneWire devices
@@ -211,16 +211,17 @@ void loop() {
     serializeJson(doc, Serial);
     Serial.println("");
 
-    BearSSL::WiFiClientSecure *client = new BearSSL::WiFiClientSecure();
+    BearSSL::WiFiClientSecure client = BearSSL::WiFiClientSecure();
     // Integrate the cert store with this connection
-    client->setCertStore(&certStore);
+    client.setCertStore(&certStore);
 
 
     HTTPClient https;
 
     Serial.print("[HTTPS] begin...\n");
     
-    if (https.begin(*client, SERVICE_URL)) {  // HTTPS
+//    if (https.begin(*client, SERVICE_URL)) {  // HTTPS
+    if (https.begin(client, SERVICE_URL)) {  // HTTPS
 
       https.addHeader("x-api-key", API_KEY);
       https.addHeader("Content-Type", "application/json");
@@ -254,7 +255,8 @@ void loop() {
 //    postMessage.toCharArray(char_array, str_len);
 //    post(client, SERVICE_HOST, 443, SERVICE_PATH, char_array);
       
-    delete client;
+//    delay(1000);
+//    delete client;
 
 //  } else {
 //    Serial.printf("WiFi not connected\n");
