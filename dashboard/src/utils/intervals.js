@@ -1,5 +1,3 @@
-import { ascend, prop } from 'ramda'
-
 export const getSortedBoundaries = (a, b) => {
   const boundaries = []
 
@@ -12,7 +10,7 @@ export const getSortedBoundaries = (a, b) => {
     boundaries.push({ x: to, source: 'b', status: false })
   })
 
-  return boundaries.sort(ascend(prop('x')))
+  return boundaries.sort((a, b) => a.x - b.x)
 }
 
 export const walkBoundaries = (boundaries, getStatus) => {

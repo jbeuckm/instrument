@@ -64,37 +64,37 @@ describe('intervals', () => {
         [5, 6],
       ])
     })
-  })
 
-  test('multiple removals', () => {
-    const result = difference(
-      [[0, 10]],
-      [
-        [1, 2],
-        [5, 6],
-      ]
-    )
+    test('multiple removals', () => {
+      const result = difference(
+        [[0, 10]],
+        [
+          [1, 2],
+          [5, 6],
+        ]
+      )
 
-    expect(result).toEqual([
-      [0, 1],
-      [2, 5],
-      [6, 10],
-    ])
-  })
+      expect(result).toEqual([
+        [0, 1],
+        [2, 5],
+        [6, 10],
+      ])
+    })
 
-  test('multiple minuend', () => {
-    const result = difference(
-      [
+    test('multiple minuend', () => {
+      const result = difference(
+        [
+          [0, 2],
+          [8, 10],
+        ],
+        [[4, 7]]
+      )
+
+      expect(result).toEqual([
         [0, 2],
         [8, 10],
-      ],
-      [[4, 7]]
-    )
-
-    expect(result).toEqual([
-      [0, 2],
-      [8, 10],
-    ])
+      ])
+    })
   })
 
   test('intersection', () => {
