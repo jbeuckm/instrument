@@ -2,49 +2,35 @@ import { ascend, prop } from 'ramda'
 
 export const difference = (a, b) => {
   const boundaries = [
-    { x: a[0], source: 'a', position: 'left' },
-    { x: a[1], source: 'a', position: 'right' },
-    { x: b[0], source: 'b', position: 'left' },
-    { x: b[1], source: 'b', position: 'right' },
+    { x: a[0], source: 'minuend', status: true },
+    { x: a[1], source: 'minuend', status: false },
+    { x: b[0], source: 'subtrahend', status: true },
+    { x: b[1], source: 'subtrahend', status: false },
   ]
 
   const sorted = boundaries.sort(ascend(prop('x')))
 
   const results = []
-  let status = false
-
   let start
-  let minuend = 0
-  let subtrahend = 0
 
-  sorted.forEach(({ x, source, position }) => {
-    if (source === 'a') {
-      if (position === 'left') {
-        minuend = 1
-      }
-      if (position === 'right') {
-        minuend = 0
-      }
-    }
-    if (source === 'b') {
-      if (position === 'left') {
-        subtrahend = 1
-      }
-      if (position === 'right') {
-        subtrahend = 0
-      }
-    }
+  const statuses = {
+    minuend: false,
+    subtrahend: false,
+  }
+  let lastStatus = false
 
-    const newStatus = minuend === 1 && subtrahend === 0
+  sorted.forEach(({ x, source, status }) => {
+    statuses[source] = status
 
-    if (status !== newStatus) {
+    const newStatus = statuses['minuend'] && !statuses['subtrahend']
+
+    if (lastStatus !== newStatus) {
       if (newStatus) {
         start = x
       } else {
         results.push([start, x])
-        start = undefined
       }
-      status = newStatus
+      lastStatus = newStatus
     }
   })
 
