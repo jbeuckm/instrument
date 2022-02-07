@@ -1,4 +1,4 @@
-import { difference, union } from './intervals'
+import { difference, intersection, union } from './intervals'
 
 describe('intervals', () => {
   describe('difference', () => {
@@ -97,8 +97,14 @@ describe('intervals', () => {
     ])
   })
 
-  xtest('union', () => {
-    const result = union([0, 1], [3, 4])
+  test('intersection', () => {
+    const result = intersection([[0, 3]], [[1, 4]])
+
+    expect(result).toEqual([[1, 3]])
+  })
+
+  test('union', () => {
+    const result = union([[0, 1]], [[3, 4]])
 
     expect(result).toEqual([
       [0, 1],

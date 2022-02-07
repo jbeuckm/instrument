@@ -1,32 +1,34 @@
 import { ascend, prop } from 'ramda'
 
-export const difference = (a, b) => {
+export const getSortedBoundaries = (a, b) => {
   const boundaries = []
 
   a.forEach(([from, to]) => {
-    boundaries.push({ x: from, source: 'minuend', status: true })
-    boundaries.push({ x: to, source: 'minuend', status: false })
+    boundaries.push({ x: from, source: 'a', status: true })
+    boundaries.push({ x: to, source: 'a', status: false })
   })
   b.forEach(([from, to]) => {
-    boundaries.push({ x: from, source: 'subtrahend', status: true })
-    boundaries.push({ x: to, source: 'subtrahend', status: false })
+    boundaries.push({ x: from, source: 'b', status: true })
+    boundaries.push({ x: to, source: 'b', status: false })
   })
 
-  const sorted = boundaries.sort(ascend(prop('x')))
+  return boundaries.sort(ascend(prop('x')))
+}
 
+export const walkBoundaries = (boundaries, getStatus) => {
+  let lastStatus = false
   const results = []
   let start
 
   const statuses = {
-    minuend: false,
-    subtrahend: false,
+    a: false,
+    b: false,
   }
-  let lastStatus = false
 
-  sorted.forEach(({ x, source, status }) => {
+  boundaries.forEach(({ x, source, status }) => {
     statuses[source] = status
 
-    const newStatus = statuses['minuend'] && !statuses['subtrahend']
+    const newStatus = getStatus(statuses['a'], statuses['b'])
 
     if (lastStatus !== newStatus) {
       if (newStatus) {
@@ -40,4 +42,22 @@ export const difference = (a, b) => {
   })
 
   return results
+}
+
+export const difference = (a, b) => {
+  const boundaries = getSortedBoundaries(a, b)
+
+  return walkBoundaries(boundaries, (statusA, statusB) => statusA && !statusB)
+}
+
+export const intersection = (a, b) => {
+  const boundaries = getSortedBoundaries(a, b)
+
+  return walkBoundaries(boundaries, (statusA, statusB) => statusA && statusB)
+}
+
+export const union = (a, b) => {
+  const boundaries = getSortedBoundaries(a, b)
+
+  return walkBoundaries(boundaries, (statusA, statusB) => statusA || statusB)
 }
