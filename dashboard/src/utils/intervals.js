@@ -1,12 +1,16 @@
 import { ascend, prop } from 'ramda'
 
 export const difference = (a, b) => {
-  const boundaries = [
-    { x: a[0], source: 'minuend', status: true },
-    { x: a[1], source: 'minuend', status: false },
-    { x: b[0], source: 'subtrahend', status: true },
-    { x: b[1], source: 'subtrahend', status: false },
-  ]
+  const boundaries = []
+
+  a.forEach(([from, to]) => {
+    boundaries.push({ x: from, source: 'minuend', status: true })
+    boundaries.push({ x: to, source: 'minuend', status: false })
+  })
+  b.forEach(([from, to]) => {
+    boundaries.push({ x: from, source: 'subtrahend', status: true })
+    boundaries.push({ x: to, source: 'subtrahend', status: false })
+  })
 
   const sorted = boundaries.sort(ascend(prop('x')))
 
@@ -30,6 +34,7 @@ export const difference = (a, b) => {
       } else {
         results.push([start, x])
       }
+
       lastStatus = newStatus
     }
   })

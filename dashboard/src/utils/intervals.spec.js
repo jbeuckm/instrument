@@ -3,7 +3,7 @@ import { difference, union } from './intervals'
 describe('intervals', () => {
   describe('difference', () => {
     test('contained', () => {
-      const result = difference([0, 5], [1, 2])
+      const result = difference([[0, 5]], [[1, 2]])
 
       expect(result).toEqual([
         [0, 1],
@@ -11,33 +11,33 @@ describe('intervals', () => {
       ])
     })
     test('contains', () => {
-      const result = difference([1, 2], [0, 5])
+      const result = difference([[1, 2]], [[0, 5]])
 
       expect(result).toEqual([])
     })
     test('before start', () => {
-      const result = difference([0, 5], [-2, -1])
+      const result = difference([[0, 5]], [[-2, -1]])
 
       expect(result).toEqual([[0, 5]])
     })
     test('across start', () => {
-      const result = difference([0, 5], [-1, 2])
+      const result = difference([[0, 5]], [[-1, 2]])
 
       expect(result).toEqual([[2, 5]])
     })
     test('across end', () => {
-      const result = difference([0, 5], [2, 8])
+      const result = difference([[0, 5]], [[2, 8]])
 
       expect(result).toEqual([[0, 2]])
     })
     test('after end', () => {
-      const result = difference([0, 5], [7, 8])
+      const result = difference([[0, 5]], [[7, 8]])
 
       expect(result).toEqual([[0, 5]])
     })
 
     test('subtract point', () => {
-      const result = difference([0, 5], [2, 2])
+      const result = difference([[0, 5]], [[2, 2]])
 
       expect(result).toEqual([
         [0, 2],
@@ -45,10 +45,56 @@ describe('intervals', () => {
       ])
     })
     test('from point', () => {
-      const result = difference([2, 2], [0, 5])
+      const result = difference([[2, 2]], [[0, 5]])
 
       expect(result).toEqual([])
     })
+
+    test('double overlap', () => {
+      const result = difference(
+        [
+          [0, 2],
+          [4, 6],
+        ],
+        [[1, 5]]
+      )
+
+      expect(result).toEqual([
+        [0, 1],
+        [5, 6],
+      ])
+    })
+  })
+
+  test('multiple removals', () => {
+    const result = difference(
+      [[0, 10]],
+      [
+        [1, 2],
+        [5, 6],
+      ]
+    )
+
+    expect(result).toEqual([
+      [0, 1],
+      [2, 5],
+      [6, 10],
+    ])
+  })
+
+  test('multiple minuend', () => {
+    const result = difference(
+      [
+        [0, 2],
+        [8, 10],
+      ],
+      [[4, 7]]
+    )
+
+    expect(result).toEqual([
+      [0, 2],
+      [8, 10],
+    ])
   })
 
   xtest('union', () => {
