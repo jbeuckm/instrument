@@ -5,6 +5,7 @@ import { groupBy, mapObjIndexed, prop } from 'ramda'
 import SunCalc from 'suncalc'
 import client from '../client'
 import debounce from 'lodash.debounce'
+import makePromiseCancelable from './makePromiseCancelable'
 
 const colors = ['#9e6864', '#3f0f63', '#35868c', '#f24b3f', '#6d9c49']
 
@@ -13,25 +14,38 @@ const SelectDataContainer = createContainer('zoom', 'voronoi')
 const DAY = 24 * 3600 * 1000
 const START_DATE = new Date('1/26/2021')
 
+let currentRequest
+
+const now = new Date()
+
 const App = () => {
   const [series, setSeries] = useState()
   const [annotations, setAnnotations] = useState([])
   const [voronoiData, setVoronoiData] = useState()
-  const [now, setNow] = useState(new Date())
-  const [zoomDomainX, setZoomDomainX] = useState([now.valueOf])
-  const [maxX, setMaxX] = useState(new Date())
 
   const updateData = debounce(
     (from, to) => {
-      client.Readings.list({ from, to }).then((records) => {
-        const groups = groupBy(prop('source'))(records)
-        let i = 0
-        const seriesFromArray = (data) => ({ data, color: colors[i++ % colors.length] })
-        const newSeries = mapObjIndexed(seriesFromArray)(groups)
-        setSeries(newSeries)
-      })
+      if (currentRequest) {
+        console.log('cancel')
+        currentRequest.cancel()
+      }
+
+      currentRequest = makePromiseCancelable(client.Readings.list({ from, to }))
+
+      currentRequest
+        .then((records) => {
+          const groups = groupBy(prop('source'))(records)
+          let i = 0
+          const seriesFromArray = (data) => ({ data, color: colors[i++ % colors.length] })
+          const newSeries = mapObjIndexed(seriesFromArray)(groups)
+          setSeries(newSeries)
+        })
+        .catch((error) => console.error(error))
+        .finally(() => {
+          currentRequest = null
+        })
     },
-    1000,
+    100,
     { trailing: true }
   )
 
@@ -41,7 +55,7 @@ const App = () => {
 
   const handleDomainChanged = useCallback(
     (domain) => {
-      setZoomDomainX(domain.x)
+      // setZoomDomainX(domain.x)
 
       updateData(domain.x[0].valueOf(), domain.x[1].valueOf())
     },
@@ -79,7 +93,7 @@ const App = () => {
         width={window.innerWidth}
         scale={{ x: 'time' }}
         minDomain={{ x: START_DATE, y: -30 }}
-        maxDomain={{ x: maxX, y: 55 }}
+        maxDomain={{ x: now, y: 55 }}
         containerComponent={
           <SelectDataContainer
             zoomDimension="x"
