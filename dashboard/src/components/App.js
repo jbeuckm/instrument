@@ -48,7 +48,6 @@ const App = () => {
           }
         })
         setSeriesColor(newColors)
-        console.log(newSeries)
 
         if (series)
           Object.keys(series).forEach((key) => {
@@ -65,8 +64,10 @@ const App = () => {
       .catch((error) => console.error(error))
   }
 
+  const initialInterval = [now.valueOf() - 3 * DAY, now.valueOf()]
+
   useEffect(() => {
-    fetchInterval()
+    fetchInterval(initialInterval[0], initialInterval[1])
   }, [])
 
   const handleDomainChanged = (domain) => {
@@ -110,7 +111,7 @@ const App = () => {
         containerComponent={
           <SelectDataContainer
             zoomDimension="x"
-            zoomDomain={{ x: [now.valueOf() - 3 * DAY, now.valueOf()] }}
+            zoomDomain={{ x: initialInterval }}
             responsive={false}
             onZoomDomainChange={handleDomainChanged}
             allowPan={true}
