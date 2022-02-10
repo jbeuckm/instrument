@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { VictoryChart, VictoryAxis, VictoryLine, VictoryArea, createContainer } from 'victory'
 import Annotations from './Annotations'
-import { groupBy, mapObjIndexed, prop } from 'ramda'
+import { ascend, groupBy, prop } from 'ramda'
 import SunCalc from 'suncalc'
 import client from '../client'
-import debounce from 'lodash.debounce'
-import makePromiseCancelable from './makePromiseCancelable'
+
+import { difference, union } from '../utils/intervals'
 
 const colors = ['#9e6864', '#3f0f63', '#35868c', '#f24b3f', '#6d9c49']
 
@@ -14,8 +14,6 @@ const SelectDataContainer = createContainer('zoom', 'voronoi')
 const DAY = 24 * 3600 * 1000
 const START_DATE = new Date('1/26/2021')
 
-let currentRequest
-
 const now = new Date()
 
 const App = () => {
@@ -23,44 +21,59 @@ const App = () => {
   const [annotations, setAnnotations] = useState([])
   const [voronoiData, setVoronoiData] = useState()
 
-  const updateData = debounce(
-    (from, to) => {
-      if (currentRequest) {
-        console.log('cancel')
-        currentRequest.cancel()
-      }
+  const [seriesColor, setSeriesColor] = useState({})
 
-      currentRequest = makePromiseCancelable(client.Readings.list({ from, to }))
+  const [fetchedIntervals, setFetchedIntervals] = useState([])
 
-      currentRequest
-        .then((records) => {
-          const groups = groupBy(prop('source'))(records)
-          let i = 0
-          const seriesFromArray = (data) => ({ data, color: colors[i++ % colors.length] })
-          const newSeries = mapObjIndexed(seriesFromArray)(groups)
-          setSeries(newSeries)
+  const fetchInterval = (from, to) => {
+    if (!from || !to) {
+      return
+    }
+    const gaps = difference([[from, to]], fetchedIntervals)
+
+    const gap = gaps[0]
+    if (!gap) {
+      return
+    }
+
+    client.Readings.list({ from: gap[0], to: gap[1] })
+      .then((records) => {
+        const newSeries = groupBy(prop('source'))(records)
+
+        const newColors = { ...seriesColor }
+
+        Object.keys(newSeries).forEach((seriesId, index) => {
+          if (!seriesColor[seriesId]) {
+            newColors[seriesId] = colors[index % colors.length]
+          }
         })
-        .catch((error) => console.error(error))
-        .finally(() => {
-          currentRequest = null
-        })
-    },
-    100,
-    { trailing: true }
-  )
+        setSeriesColor(newColors)
+        console.log(newSeries)
+
+        if (series)
+          Object.keys(series).forEach((key) => {
+            if (newSeries[key]) {
+              newSeries[key] = newSeries[key].concat(series[key]).sort(ascend(prop('timestamp')))
+            } else {
+              newSeries[key] = series[key]
+            }
+          })
+
+        setSeries(newSeries)
+        setFetchedIntervals(union(fetchedIntervals, [gap]))
+      })
+      .catch((error) => console.error(error))
+  }
 
   useEffect(() => {
-    updateData()
+    fetchInterval()
   }, [])
 
-  const handleDomainChanged = useCallback(
-    (domain) => {
-      // setZoomDomainX(domain.x)
+  const handleDomainChanged = (domain) => {
+    // setZoomDomainX(domain.x)
 
-      updateData(domain.x[0].valueOf(), domain.x[1].valueOf())
-    },
-    [updateData]
-  )
+    fetchInterval(domain.x[0].valueOf(), domain.x[1].valueOf())
+  }
 
   const handleClickLegend = useCallback((key) => {
     console.log(key)
@@ -77,7 +90,7 @@ const App = () => {
           <span onClick={() => handleClickLegend(key)} style={{ padding: 5 }}>
             <span
               style={{
-                backgroundColor: series[key].color,
+                backgroundColor: seriesColor[key],
                 display: 'inline-block',
                 width: 20,
                 height: 20,
@@ -143,11 +156,11 @@ const App = () => {
                 style={{
                   data: {
                     strokeWidth: 1,
-                    stroke: item.color,
+                    stroke: seriesColor[key],
                   },
                   parent: { border: `1px solid #666` },
                 }}
-                data={item.data}
+                data={item}
                 x={'timestamp'}
                 y={'reading'}
               />

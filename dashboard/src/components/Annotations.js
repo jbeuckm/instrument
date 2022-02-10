@@ -9,9 +9,10 @@ const Annotations = ({ annotations, scale }) => {
     dx: 50,
   })
 
-  return annotations.map((annotation) => {
+  return annotations.map((annotation, index) => {
     return (
       <AnnotationLabel
+        key={index}
         x={scale.x(annotation._x)}
         y={scale.y(annotation._y)}
         dx={props.dx}
